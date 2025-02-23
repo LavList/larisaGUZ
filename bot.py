@@ -1,38 +1,28 @@
-import asyncio
+import os
 import logging
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import Message
-from aiogram.filters import Command
+from aiogram.types import WebhookInfo
+from fastapi import FastAPI
+import uvicorn
 
-# Включаем логирование
-logging.basicConfig(level=logging.INFO)
+TOKEN = os.getenv("7517028969:AAHs6cWqDnzK8xYkIUcE3peGxSNAiwjqkHw")  # Используй переменные окружения
+WEBHOOK_URL = os.getenv("https://larisaguz.onrender.com")  # Например, твой Render-домен
 
-# Укажи свой токен бота
-TOKEN = "7517028969:AAHs6cWqDnzK8xYkIUcE3peGxSNAiwjqkHw"
-
-# Создаем объекты бота и диспетчера
 bot = Bot(token=TOKEN)
-dp = Dispatcher()
+dp = Dispatcher(bot)
+app = FastAPI()
 
+@app.on_event("startup")
+async def on_startup():
+    webhook_info = await bot.get_webhook_info()
+    if webhook_info.url != WEBHOOK_URL:
+        await bot.set_webhook(WEBHOOK_URL)
+    logging.info(f"Webhook установлен на {WEBHOOK_URL}")
 
-# Обработчик команды /start
-@dp.message(Command("start"))
-async def start_handler(message: Message):
-    await message.answer("Привет! Я твой бот. Используй команды для взаимодействия.")
-
-
-# Обработчик команды /help
-@dp.message(Command("help"))
-async def help_handler(message: Message):
-    await message.answer("Доступные команды:\n/start - Запустить бота\n/help - Получить помощь")
-
-
-async def main():
-    # Удаляем прошлые обновления
-    await bot.delete_webhook(drop_pending_updates=True)
-    # Запускаем поллинг
-    await dp.start_polling(bot)
-
+@app.post("/")
+async def bot_webhook(update: dict):
+    telegram_update = types.Update(**update)
+    await dp.process_update(telegram_update)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8080)))
