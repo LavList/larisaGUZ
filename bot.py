@@ -8,7 +8,7 @@ from aiogram.filters import Command
 logging.basicConfig(level=logging.INFO)
 
 # Укажи свой токен бота
-TOKEN = "YOUR_BOT_TOKEN"
+TOKEN = "7517028969:AAHs6cWqDnzK8xYkIUcE3peGxSNAiwjqkHw"
 
 # Создаем объекты бота и диспетчера
 bot = Bot(token=TOKEN)
